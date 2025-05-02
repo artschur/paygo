@@ -1,0 +1,26 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:14
+    container_name: paygo-postgres
+    environment:
+      POSTGRES_USER: paygo
+      POSTGRES_PASSWORD: paygopassword
+      POSTGRES_DB: paygo
+    ports:
+      - '5432:5432'
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      # Mount the SQL initialization script
+      - ./sql/payments.sql:/docker-entrypoint-initdb.d/payments.sql
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U paygo']
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+    name: paygo-postgres-data

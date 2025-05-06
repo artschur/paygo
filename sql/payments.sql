@@ -6,7 +6,6 @@ CREATE TABLE users (
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-x
 -- Then create wallets table (which references users)
 CREATE TABLE wallets (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid (),

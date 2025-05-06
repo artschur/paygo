@@ -34,8 +34,8 @@ func main() {
 
 	mux := http.NewServeMux()
 
-	mux.HandleFunc("GET /", paymentHandler.ListPayments)
-	mux.HandleFunc("POST /", paymentHandler.InsertPayment)
+	mux.HandleFunc("GET /payments", paymentHandler.ListPayments)
+	mux.HandleFunc("POST /payments", paymentHandler.InsertPayment)
 
 	server := &http.Server{
 		Addr:    fmt.Sprintf(":%s", config.Port),

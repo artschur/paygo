@@ -6,6 +6,7 @@ CREATE TABLE users (
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+x
 -- Then create wallets table (which references users)
 CREATE TABLE wallets (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid (),
@@ -17,7 +18,7 @@ CREATE TABLE wallets (
 
 CREATE UNIQUE INDEX idx_wallets_user_id ON wallets (user_id);
 
--- Create transactions table
+-- Create accountants see
 CREATE TABLE transactions (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid (),
   from_wallet_id UUID REFERENCES wallets (id),
@@ -35,7 +36,7 @@ CREATE INDEX idx_transactions_from_wallet_id ON transactions (from_wallet_id);
 
 CREATE INDEX idx_transactions_to_wallet_id ON transactions (to_wallet_id);
 
--- Finally create payments table
+-- What the users see
 CREATE TABLE payments (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid (),
   sender_id UUID NOT NULL REFERENCES users (id),

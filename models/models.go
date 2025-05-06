@@ -35,12 +35,20 @@ type Transaction struct {
 }
 
 type Payment struct {
-	ID            uuid.UUID
-	SenderID      uuid.UUID
-	ReceiverID    uuid.UUID
-	Amount        int64  // in cents
-	Status        string // 'initiated', 'completed', etc
-	TransactionID *uuid.UUID
-	Note          string
-	CreatedAt     time.Time
+	ID            uuid.UUID  `json:"id"`
+	SenderID      uuid.UUID  `json:"sender_id"`
+	ReceiverID    uuid.UUID  `json:"receiver_id"`
+	Amount        int64      `json:"amount"`
+	Status        string     `json:"status"`
+	TransactionID *uuid.UUID `json:"transaction_id"`
+	Note          string     `json:"note"`
+	CreatedAt     time.Time  `json:"created_at"`
+}
+
+type PaymentInsert struct {
+	SenderID   uuid.UUID `json:"sender_id"`
+	ReceiverID uuid.UUID `json:"receiver_id"`
+	Amount     int64     `json:"amount"`
+	Status     string    `json:"status"`
+	Note       string    `json:"note"`
 }

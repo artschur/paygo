@@ -14,19 +14,6 @@ import (
 	"time"
 )
 
-type PaymentHandler struct {
-	service *payments.PaymentService
-}
-
-func (p *PaymentHandler) ListPayments(w http.ResponseWriter, r *http.Request) {
-	p.service.ListPayments(r.Context())
-}
-func NewPaymentsHandler(s *payments.PaymentService) *PaymentHandler {
-	return &PaymentHandler{
-		service: s,
-	}
-}
-
 func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -43,10 +30,12 @@ func main() {
 
 	paymentsStore := payments.NewPaymentsStore(db)
 	paymentsService := payments.NewPaymentService(paymentsStore)
-	paymentHandler := NewPaymentsHandler(paymentsService)
+	paymentHandler := payments.NewPaymentsHandler(paymentsService)
 
 	mux := http.NewServeMux()
+
 	mux.HandleFunc("GET /", paymentHandler.ListPayments)
+	mux.HandleFunc("POST /", paymentHandler.InsertPayment)
 
 	server := &http.Server{
 		Addr:    fmt.Sprintf(":%s", config.Port),

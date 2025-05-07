@@ -2,7 +2,6 @@ package users
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"paygo/models"
 	"strings"
@@ -69,13 +68,9 @@ func (s *UserStore) GetAllUsers(ctx context.Context) (users []models.User, err e
 		}
 		usersContainer = append(usersContainer, user)
 	}
-	if len(users) == 0 {
-		return nil, errors.New("No users found")
-	}
 
 	if rows.Err() != nil {
 		return nil, fmt.Errorf("store: error iterating over rows: %w", rows.Err())
 	}
-
-	return users, nil
+	return usersContainer, nil
 }

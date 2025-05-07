@@ -8,8 +8,7 @@ import (
 	"os"
 	"os/signal"
 	"paygo/config"
-	database "paygo/db"
-	"paygo/payments"
+	"paygo/routes"
 	"syscall"
 	"time"
 )
@@ -25,17 +24,9 @@ func main() {
 		log.Println("Shutting down server...")
 		os.Exit(1) // Exit the program with error code
 	}
-	fmt.Printf("db key %v", config.DatabaseURL)
-	db := database.Connect(ctx, config.DatabaseURL)
-
-	paymentsStore := payments.NewPaymentsStore(db)
-	paymentsService := payments.NewPaymentService(paymentsStore)
-	paymentHandler := payments.NewPaymentsHandler(paymentsService)
 
 	mux := http.NewServeMux()
-
-	mux.HandleFunc("GET /payments", paymentHandler.ListPayments)
-	mux.HandleFunc("POST /payments", paymentHandler.InsertPayment)
+	mux = routes.CreateRouter(ctx, mux, config)
 
 	server := &http.Server{
 		Addr:    fmt.Sprintf(":%s", config.Port),

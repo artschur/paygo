@@ -13,6 +13,12 @@ type PaymentHandler struct {
 	service *PaymentService
 }
 
+func NewPaymentsHandler(s *PaymentService) *PaymentHandler {
+	return &PaymentHandler{
+		service: s,
+	}
+}
+
 func (p *PaymentHandler) ListPayments(w http.ResponseWriter, r *http.Request) {
 	payments, err := p.service.ListPayments(r.Context())
 	if err != nil {
@@ -49,10 +55,4 @@ func (p *PaymentHandler) InsertPayment(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusCreated)
 	fmt.Fprintf(w, "Payment created with ID: %s", newPaymentId)
-}
-
-func NewPaymentsHandler(s *PaymentService) *PaymentHandler {
-	return &PaymentHandler{
-		service: s,
-	}
 }

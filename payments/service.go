@@ -2,7 +2,7 @@ package payments
 
 import (
 	"context"
-	"errors"
+	"fmt"
 	"paygo/models"
 
 	"github.com/google/uuid"
@@ -17,13 +17,22 @@ func NewPaymentService(store *PaymentsStore) *PaymentService {
 }
 
 func (s *PaymentService) ListPayments(ctx context.Context) ([]models.Payment, error) {
-	return s.store.GetAllPayments(ctx)
+	payments, err := s.store.GetAllPayments(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("service: failed to fetch payments %v", err.Error())
+	}
+
+	if len(payments) == 0 {
+		return nil, ErrNoPaymentsFound
+	}
+
+	return payments, nil
 }
 
 func (s *PaymentService) InsertNewPayment(ctx context.Context, newP *models.PaymentInsert) (newPaymentId uuid.UUID, err error) {
 	newPaymentId, err = s.store.InsertNewPayment(ctx, newP)
 	if err != nil {
-		return uuid.Nil, errors.New("Failed inserting new payment:" + err.Error())
+		return uuid.Nil, err
 	}
 
 	return newPaymentId, nil

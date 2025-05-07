@@ -44,7 +44,7 @@ func (s *UserStore) GetUserById(ctx context.Context, userId uuid.UUID) (user mod
 func (s *UserStore) GetAllUsers(ctx context.Context) (users []models.User, err error) {
 	wantCols := []string{"id", "name", "email", "created_at"}
 	query := fmt.Sprintf(
-		"SELECT %s FROM users",
+		"SELECT %s FROM users ORDER BY created_at DESC",
 		strings.Join(wantCols, ", "),
 	)
 	rows, err := s.db.Query(ctx, query)

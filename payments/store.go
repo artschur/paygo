@@ -26,7 +26,7 @@ func (s *PaymentsStore) GetAllPayments(ctx context.Context) (payments []models.P
 	wantCols := []string{"id", "sender_id", "receiver_id", "amount", "status", "transaction_id", "note", "created_at"}
 
 	query := fmt.Sprintf(
-		"SELECT %s FROM payments",
+		"SELECT %s FROM payments ORDER BY created_at DESC",
 		strings.Join(wantCols, ", "),
 	)
 

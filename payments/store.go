@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"paygo/models"
+	"strings"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
@@ -21,7 +22,15 @@ func NewPaymentsStore(db *pgxpool.Pool) *PaymentsStore {
 
 func (s *PaymentsStore) GetAllPayments(ctx context.Context) (payments []models.Payment, err error) {
 	var paymentsList []models.Payment
-	rows, err := s.db.Query(ctx, `select * from payments;`)
+
+	wantCols := []string{"id", "sender_id", "receiver_id", "amount", "status", "transaction_id", "note", "created_at"}
+
+	query := fmt.Sprintf(
+		"SELECT %s FROM payments",
+		strings.Join(wantCols, ", "),
+	)
+
+	rows, err := s.db.Query(ctx, query)
 	if err != nil {
 		return nil, errors.New("Error querying payments: " + err.Error())
 	}
@@ -30,7 +39,17 @@ func (s *PaymentsStore) GetAllPayments(ctx context.Context) (payments []models.P
 
 	for rows.Next() {
 		var payment models.Payment
-		err = rows.Scan(&payment)
+		err = rows.Scan(
+			&payment.ID,
+			&payment.SenderID,
+			&payment.ReceiverID,
+			&payment.Amount,
+			&payment.Status,
+			&payment.TransactionID,
+			&payment.Note,
+			&payment.CreatedAt,
+		)
+
 		if err != nil {
 			return nil, err
 		}
@@ -94,6 +113,9 @@ func (s *PaymentsStore) InsertNewPayment(ctx context.Context, newPayment *models
     `, newPayment.SenderID, newPayment.ReceiverID).Scan(&senderWalletId, &senderBalance, &receiverWalletId)
 
 	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return uuid.Nil, ErrUserIdNotFound
+		}
 		return uuid.Nil, fmt.Errorf("failed to get wallets: %w", err)
 	}
 

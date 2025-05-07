@@ -2,7 +2,9 @@ package payments
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
+	"log"
 	"net/http"
 	"paygo/models"
 
@@ -22,7 +24,13 @@ func NewPaymentsHandler(s *PaymentService) *PaymentHandler {
 func (p *PaymentHandler) ListPayments(w http.ResponseWriter, r *http.Request) {
 	payments, err := p.service.ListPayments(r.Context())
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		switch {
+		case errors.Is(err, ErrNoPaymentsFound):
+			http.Error(w, "No payments found", http.StatusNotFound)
+		default:
+			log.Printf("error listing all payments, %v", err.Error())
+			http.Error(w, "Internal server error", http.StatusInternalServerError)
+		}
 		return
 	}
 
@@ -32,8 +40,8 @@ func (p *PaymentHandler) ListPayments(w http.ResponseWriter, r *http.Request) {
 
 func (p *PaymentHandler) InsertPayment(w http.ResponseWriter, r *http.Request) {
 	var newPayment models.PaymentInsert
-
 	newPayment.Status = "pending"
+
 	if err := json.NewDecoder(r.Body).Decode(&newPayment); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -49,7 +57,15 @@ func (p *PaymentHandler) InsertPayment(w http.ResponseWriter, r *http.Request) {
 	}
 	newPaymentId, err := p.service.InsertNewPayment(r.Context(), &newPayment)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		switch {
+		case errors.Is(err, ErrUserIdNotFound):
+			http.Error(w, "User ID passed does not exist in our DB.", http.StatusBadRequest)
+		case errors.Is(err, ErrNoPaymentsFound):
+			http.Error(w, "No payments found in DB", http.StatusNotFound)
+		default:
+			log.Printf("handler: error inserting payment: %v", err.Error())
+			http.Error(w, "Error inserting payment", http.StatusInternalServerError)
+		}
 		return
 	}
 

@@ -17,10 +17,10 @@ type User struct {
 
 type Wallet struct {
 	ID        uuid.UUID `json:"id"`
-	UserID    uuid.UUID `json:"user_id"`
+	UserID    uuid.UUID `json:"user_id,omitzero"`
 	Balance   int64     `json:"balance"` // in cents
 	Currency  string    `json:"currency"`
-	UpdatedAt time.Time `json:"updated_at"`
+	UpdatedAt time.Time `json:"last_transaction"`
 }
 
 type Transaction struct {

@@ -52,3 +52,9 @@ type PaymentInsert struct {
 	Status     string    `json:"status"`
 	Note       string    `json:"note"`
 }
+
+type PaymentWithNames struct {
+	Payment
+	SenderName   string `json:"sender_name"`
+	ReceiverName string `json:"receiver_name"`
+}

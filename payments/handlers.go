@@ -21,8 +21,8 @@ func NewPaymentsHandler(s *PaymentService) *PaymentHandler {
 	}
 }
 
-func (p *PaymentHandler) ListPayments(w http.ResponseWriter, r *http.Request) {
-	payments, err := p.service.ListPayments(r.Context())
+func (p *PaymentHandler) GetAllPayments(w http.ResponseWriter, r *http.Request) {
+	payments, err := p.service.GetAllPayments(r.Context())
 	if err != nil {
 		switch {
 		case errors.Is(err, ErrNoPaymentsFound):
@@ -36,6 +36,33 @@ func (p *PaymentHandler) ListPayments(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(payments)
+}
+
+func (p *PaymentHandler) GetPaymentsByUserId(w http.ResponseWriter, r *http.Request) {
+	userId := r.URL.Query().Get("user_id")
+
+	userUUID, err := uuid.Parse(userId)
+	if err != nil {
+		http.Error(w, "Invalid user UUID format", http.StatusBadRequest)
+		return
+	}
+
+	payments, err := p.service.GetPaymentsByUserId(r.Context(), userUUID)
+	if err != nil {
+		if errors.Is(err, ErrNoPaymentsFound) {
+			http.Error(w, "No payments found for user.", http.StatusNotFound)
+			return
+		}
+		log.Printf("failed in retrieving payments: %v", err)
+		http.Error(w, "Failed to retrieve payments", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	if err := json.NewEncoder(w).Encode(payments); err != nil {
+		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+		return
+	}
 }
 
 func (p *PaymentHandler) InsertPayment(w http.ResponseWriter, r *http.Request) {

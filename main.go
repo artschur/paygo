@@ -19,18 +19,14 @@ func main() {
 
 	config := config.LoadConfig()
 
-	if config.DatabaseURL == "" || config.Port == "" {
-		log.Println("Missing required environment variables (DATABASE_URL, APP_PORT)")
-		log.Println("Shutting down server...")
-		os.Exit(1) // Exit the program with error code
-	}
-
 	mux := http.NewServeMux()
 	mux = routes.CreateRouter(ctx, mux, config)
 
+	wrappedMux := LoggingMiddleware(mux)
+
 	server := &http.Server{
 		Addr:    fmt.Sprintf(":%s", config.Port),
-		Handler: mux,
+		Handler: wrappedMux,
 	}
 
 	go func() {

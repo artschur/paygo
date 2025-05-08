@@ -21,9 +21,13 @@ func NewUserStore(db *pgxpool.Pool) *UserStore {
 }
 
 func (s *UserStore) GetUserById(ctx context.Context, userId uuid.UUID) (user models.User, err error) {
-	wantCols := []string{"id", "name", "email", "created_at"}
+	wantCols := []string{"u.id", "u.name", "u.email", "u.created_at", "w.id", "w.balance", "w.currency", "w.updated_at"}
 	query := fmt.Sprintf(
-		"SELECT %s FROM users WHERE id = $1",
+		`
+		SELECT %s
+	 	FROM users u
+		LEFT JOIN wallets w ON u.id = w.user_id
+		WHERE u.id = $1`,
 		strings.Join(wantCols, ", "),
 	)
 	err = s.db.QueryRow(ctx, query, userId).Scan(
@@ -31,6 +35,10 @@ func (s *UserStore) GetUserById(ctx context.Context, userId uuid.UUID) (user mod
 		&user.Name,
 		&user.Email,
 		&user.CreatedAt,
+		&user.Wallet.ID,
+		&user.Wallet.Balance,
+		&user.Wallet.Currency,
+		&user.Wallet.UpdatedAt,
 	)
 	if err != nil {
 		if err.Error() == "no rows in result set" {

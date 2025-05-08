@@ -26,7 +26,8 @@ func CreateRouter(ctx context.Context, mux *http.ServeMux, config config.Config)
 		fmt.Fprintf(w, "Welcome to PayGo API!")
 	})
 
-	mux.HandleFunc("GET /payments", paymentHandler.ListPayments)
+	mux.HandleFunc("GET /payments", paymentHandler.GetAllPayments)
+	mux.HandleFunc("GET /user/payments", paymentHandler.GetPaymentsByUserId)
 	mux.HandleFunc("POST /payments", paymentHandler.InsertPayment)
 
 	mux.HandleFunc("GET /users", userHandler.GetAllUsers)

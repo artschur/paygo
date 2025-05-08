@@ -16,7 +16,7 @@ func NewPaymentService(store *PaymentsStore) *PaymentService {
 	return &PaymentService{store: store}
 }
 
-func (s *PaymentService) ListPayments(ctx context.Context) ([]models.Payment, error) {
+func (s *PaymentService) GetAllPayments(ctx context.Context) ([]models.Payment, error) {
 	payments, err := s.store.GetAllPayments(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("service: failed to fetch payments %v", err.Error())
@@ -36,5 +36,19 @@ func (s *PaymentService) InsertNewPayment(ctx context.Context, newP *models.Paym
 	}
 
 	return newPaymentId, nil
+}
+
+func (s *PaymentService) GetPaymentsByUserId(ctx context.Context, userId uuid.UUID) (
+	payments []models.PaymentWithNames, err error) {
+
+	payments, err = s.store.GetPaymentsByUserId(ctx, userId)
+	if err != nil {
+		return nil, fmt.Errorf("service: error querying payments: %v", err)
+	}
+	if len(payments) == 0 {
+		return nil, ErrNoPaymentsFound
+	}
+
+	return payments, nil
 
 }

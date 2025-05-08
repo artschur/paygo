@@ -20,6 +20,67 @@ func NewPaymentsStore(db *pgxpool.Pool) *PaymentsStore {
 	return &PaymentsStore{db}
 }
 
+func (s *PaymentsStore) GetPaymentsByUserId(ctx context.Context, userId uuid.UUID) ([]models.PaymentWithNames, error) {
+	var payments []models.PaymentWithNames
+
+	query := `
+		SELECT
+			p.id,
+			p.sender_id,
+			p.receiver_id,
+			p.amount,
+			p.status,
+			p.transaction_id,
+			p.note,
+			p.created_at,
+			sender.name AS sender_name,
+			receiver.name AS receiver_name
+		FROM
+			payments p
+		JOIN
+			users sender ON sender.id = p.sender_id
+		JOIN
+			users receiver ON receiver.id = p.receiver_id
+		WHERE
+			(p.sender_id = $1 OR p.receiver_id = $1) AND p.status != 'initialized'
+		ORDER BY
+			p.created_at DESC
+	`
+
+	rows, err := s.db.Query(ctx, query, userId)
+	if err != nil {
+		return nil, fmt.Errorf("handler: error querying payments: %w", err)
+	}
+
+	defer rows.Close()
+
+	for rows.Next() {
+		var payment models.PaymentWithNames
+		err = rows.Scan(
+			&payment.ID,
+			&payment.SenderID,
+			&payment.ReceiverID,
+			&payment.Amount,
+			&payment.Status,
+			&payment.TransactionID,
+			&payment.Note,
+			&payment.CreatedAt,
+			&payment.SenderName,
+			&payment.ReceiverName,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("error scanning payment row: %w", err)
+		}
+		payments = append(payments, payment)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, fmt.Errorf("error iterating payment rows: %w", err)
+	}
+
+	return payments, nil
+}
+
 func (s *PaymentsStore) GetAllPayments(ctx context.Context) (payments []models.Payment, err error) {
 	var paymentsList []models.Payment
 
@@ -67,7 +128,10 @@ func (s *PaymentsStore) GetAllPayments(ctx context.Context) (payments []models.P
 func (s *PaymentsStore) GetPaymentsUserHasPaid(ctx context.Context, userId uuid.UUID) (payments []models.Payment, err error) {
 	var paymentsList []models.Payment
 	rows, err := s.db.Query(ctx, `
-		select * from payments where sender_id = $1 order by created_at desc;
+		SELECT id, sender_id, receiver_id, amount, status, transaction_id, note, created_at
+		FROM payments
+		WHERE sender_id = $1
+		ORDER BY created_at DESC;
 		`, userId)
 	if err != nil {
 		return nil, errors.New("Error querying payments: " + err.Error())
@@ -77,7 +141,16 @@ func (s *PaymentsStore) GetPaymentsUserHasPaid(ctx context.Context, userId uuid.
 
 	for rows.Next() {
 		var payment models.Payment
-		err = rows.Scan(&payment)
+		err = rows.Scan(
+			&payment.ID,
+			&payment.SenderID,
+			&payment.ReceiverID,
+			&payment.Amount,
+			&payment.Status,
+			&payment.TransactionID,
+			&payment.Note,
+			&payment.CreatedAt,
+		)
 		if err != nil {
 			return nil, err
 		}
@@ -88,7 +161,7 @@ func (s *PaymentsStore) GetPaymentsUserHasPaid(ctx context.Context, userId uuid.
 		return nil, errors.New("Error scanning payments: " + rows.Err().Error())
 	}
 
-	return payments, nil
+	return paymentsList, nil
 }
 
 func (s *PaymentsStore) InsertNewPayment(ctx context.Context, newPayment *models.PaymentInsert) (uuid.UUID, error) {

@@ -1,0 +1,14 @@
+payments per user,
+paginate and offset those.
+
+return a summary by day?
+    [
+    may 2 {
+        payment x{}
+        payment y{}
+    }
+    may 29 {}
+]
+
+authentication -> so i can get payments by get user id by token or something.
+and make it private

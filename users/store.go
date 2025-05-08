@@ -34,7 +34,7 @@ func (s *UserStore) GetUserById(ctx context.Context, userId uuid.UUID) (user mod
 	)
 	if err != nil {
 		if err.Error() == "no rows in result set" {
-			return user, fmt.Errorf("store: user not found: %w", err)
+			return user, fmt.Errorf("store: user not found: %w", ErrUserNotFound)
 		}
 		return user, fmt.Errorf("store: failed to fetch user by ID: %w", err)
 	}

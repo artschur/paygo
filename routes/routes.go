@@ -30,6 +30,7 @@ func CreateRouter(ctx context.Context, mux *http.ServeMux, config config.Config)
 	mux.HandleFunc("POST /payments", paymentHandler.InsertPayment)
 
 	mux.HandleFunc("GET /users", userHandler.GetAllUsers)
+	mux.HandleFunc("GET /user", userHandler.GetUserById)
 
 	return mux
 }

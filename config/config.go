@@ -1,6 +1,9 @@
 package config
 
-import "os"
+import (
+	"log"
+	"os"
+)
 
 type Config struct {
 	DatabaseURL string
@@ -9,14 +12,15 @@ type Config struct {
 
 func LoadConfig() Config {
 	DB_URL := os.Getenv("DATABASE_URL")
-	if DB_URL == "" {
-		return Config{}
-	}
 
 	APP_PORT := os.Getenv("APP_PORT")
-	if APP_PORT == "" {
-		return Config{}
+
+	if DB_URL == "" || APP_PORT == "" {
+		log.Println("Missing required environment variables (DATABASE_URL, APP_PORT)")
+		log.Println("Shutting down server...")
+		os.Exit(1) // Exit the program with error code
 	}
+
 	return Config{
 		DatabaseURL: DB_URL,
 		Port:        APP_PORT,

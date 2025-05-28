@@ -21,7 +21,7 @@ func CreateRouter(ctx context.Context, mux *http.ServeMux, config config.Config)
 	userStore := users.NewUserStore(db)
 	userService := users.NewUserService(userStore)
 	userHandler := users.NewUserHandler(userService)
-	// userStore := users.NewUserStore(db)
+
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, "Welcome to PayGo API!")
 	})
@@ -32,6 +32,7 @@ func CreateRouter(ctx context.Context, mux *http.ServeMux, config config.Config)
 
 	mux.HandleFunc("GET /users", userHandler.GetAllUsers)
 	mux.HandleFunc("GET /user", userHandler.GetUserById)
+	mux.HandleFunc("POST /user", userHandler.GetUserById)
 
 	return mux
 }

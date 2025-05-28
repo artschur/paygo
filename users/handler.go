@@ -5,6 +5,7 @@ import (
 	"errors"
 	"log"
 	"net/http"
+	"paygo/models"
 
 	"github.com/google/uuid"
 )
@@ -67,4 +68,32 @@ func (h *UserHandler) GetUserById(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Internal server error", http.StatusInternalServerError)
 	}
 
+}
+
+func (h *UserHandler) CreateUser(w http.ResponseWriter, r http.Request) {
+	var newUser models.CreateUser
+	err := json.NewDecoder(r.Body).Decode(&newUser)
+	if err != nil {
+		log.Printf("failed decoding json: %v", err)
+		http.Error(w, "Internal server Error", http.StatusInternalServerError)
+		return
+	}
+	if newUser.Email == "" || newUser.Name == "" || newUser.Password == "" {
+		http.Error(w, "email, name and password are required", http.StatusBadRequest)
+		return
+	}
+	createdUser, err := h.userService.CreateUser(r.Context(), newUser)
+	if err != nil {
+		log.Printf("Failed creating user: %v", err)
+		http.Error(w, "failed writing in response", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	err = json.NewEncoder(w).Encode(createdUser)
+	if err != nil {
+		log.Printf("error encoding user response: %v", err)
+		http.Error(w, "error encoding user response", http.StatusInternalServerError)
+		return
+	}
 }

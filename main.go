@@ -8,6 +8,7 @@ import (
 	"os"
 	"os/signal"
 	"paygo/config"
+	"paygo/md"
 	"paygo/routes"
 	"syscall"
 	"time"
@@ -22,7 +23,7 @@ func main() {
 	mux := http.NewServeMux()
 	mux = routes.CreateRouter(ctx, mux, config)
 
-	wrappedMux := LoggingMiddleware(mux)
+	wrappedMux := md.LoggingMiddleware(mux)
 
 	server := &http.Server{
 		Addr:    fmt.Sprintf(":%s", config.Port),

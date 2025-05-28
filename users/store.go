@@ -82,3 +82,18 @@ func (s *UserStore) GetAllUsers(ctx context.Context) (users []models.User, err e
 	}
 	return usersContainer, nil
 }
+
+func (s *UserStore) CreateUser(ctx context.Context, newUser *models.CreateUser) (createdUser models.User, err error) {
+	row := s.db.QueryRow(ctx, `
+		INSERT INTO users (name, email, password_hash)
+		VALUES ($1, $2, $3)
+		RETURNING id, email, name, created_at;
+		`, newUser.Name, newUser.Email, newUser.Password)
+
+	err = row.Scan(&createdUser.ID, &createdUser.Email, &createdUser.Name, &createdUser.CreatedAt)
+	if err != nil {
+		return models.User{}, fmt.Errorf("store: failed to insert user %v ", err)
+	}
+
+	return createdUser, nil
+}

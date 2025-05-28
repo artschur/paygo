@@ -70,7 +70,7 @@ func (h *UserHandler) GetUserById(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func (h *UserHandler) CreateUser(w http.ResponseWriter, r http.Request) {
+func (h *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 	var newUser models.CreateUser
 	err := json.NewDecoder(r.Body).Decode(&newUser)
 	if err != nil {

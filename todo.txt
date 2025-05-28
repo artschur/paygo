@@ -12,5 +12,3 @@ return a summary by day?
 
 authentication -> so i can get payments by get user id by token or something.
 and make it private
-
-create user.

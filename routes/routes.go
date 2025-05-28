@@ -32,7 +32,7 @@ func CreateRouter(ctx context.Context, mux *http.ServeMux, config config.Config)
 
 	mux.HandleFunc("GET /users", userHandler.GetAllUsers)
 	mux.HandleFunc("GET /user", userHandler.GetUserById)
-	mux.HandleFunc("POST /user", userHandler.GetUserById)
+	mux.HandleFunc("POST /user", userHandler.CreateUser)
 
 	return mux
 }

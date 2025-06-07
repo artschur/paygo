@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"paygo/config"
 	database "paygo/db"
+	"paygo/md"
 	"paygo/payments"
 	"paygo/users"
 )
@@ -29,8 +30,8 @@ func CreateRouter(ctx context.Context, mux *http.ServeMux, config config.Config)
 	mux.HandleFunc("GET /payments", paymentHandler.GetAllPayments)
 	mux.HandleFunc("GET /user/payments", paymentHandler.GetPaymentsByUserId)
 
-	mux.HandleFunc("POST /pay", paymentHandler.InsertPayment)
-	mux.HandleFunc("POST /deposit", paymentHandler.Deposit)
+	mux.Handle("POST /pay", md.AuthMiddleware(http.HandlerFunc(paymentHandler.InsertPayment)))
+	mux.Handle("POST /deposit", md.AuthMiddleware(http.HandlerFunc(paymentHandler.Deposit)))
 
 	mux.HandleFunc("GET /users", userHandler.GetAllUsers)
 	mux.HandleFunc("GET /user", userHandler.GetUserById)

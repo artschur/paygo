@@ -8,11 +8,18 @@ import (
 	"github.com/google/uuid"
 )
 
-type PaymentService struct {
-	store *PaymentsStore
+type PaymentStoreInterface interface {
+	GetAllPayments(ctx context.Context) ([]models.Payment, error)
+	GetPaymentsByUserId(ctx context.Context, userId uuid.UUID) (payments []models.PaymentWithNames, err error)
+	InsertNewPayment(ctx context.Context, newP *models.PaymentInsert) (uuid.UUID, error)
+	ProcessDeposit(ctx context.Context, deposit *models.DepositInsert) error
 }
 
-func NewPaymentService(store *PaymentsStore) *PaymentService {
+type PaymentService struct {
+	store PaymentStoreInterface
+}
+
+func NewPaymentService(store PaymentStoreInterface) *PaymentService {
 	return &PaymentService{store: store}
 }
 
@@ -51,4 +58,19 @@ func (s *PaymentService) GetPaymentsByUserId(ctx context.Context, userId uuid.UU
 
 	return payments, nil
 
+}
+
+func (s *PaymentService) ProcessDeposit(ctx context.Context, deposit *models.DepositInsert) error {
+	if deposit.Amount <= 0 {
+		return ErrDepositAmountInvalid
+	}
+
+	if deposit.UserID == uuid.Nil {
+		return ErrIllegalUserId
+	}
+	err := s.store.ProcessDeposit(ctx, deposit)
+	if err != nil {
+		return fmt.Errorf("processing deposit: %v", err)
+	}
+	return nil
 }

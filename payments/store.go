@@ -262,3 +262,57 @@ func (s *PaymentsStore) InsertNewPayment(ctx context.Context, newPayment *models
 	return paymentId, nil
 
 }
+
+func (s *PaymentsStore) ProcessDeposit(ctx context.Context, deposit *models.DepositInsert) error {
+	tx, err := s.db.Begin(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to begin transaction: %w", err)
+	}
+	defer tx.Rollback(ctx)
+
+	var walletId uuid.UUID
+	err = tx.QueryRow(ctx, `
+		SELECT id FROM wallets WHERE user_id = $1 FOR UPDATE
+	`, deposit.UserID).Scan(&walletId)
+
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return ErrUserIdNotFound
+		}
+		return fmt.Errorf("failed to get wallet: %w", err)
+	}
+
+	var transactionId uuid.UUID
+	err = tx.QueryRow(ctx, `
+		INSERT INTO transactions (
+			from_wallet_id,
+			to_wallet_id,
+			 amount,
+			 status,
+			 type
+		)
+		VALUES (NULL, $1, $2, 'completed', 'deposit')
+		RETURNING id
+	`, walletId, deposit.Amount).Scan(&transactionId)
+
+	if err != nil {
+		return fmt.Errorf("failed to create deposit transaction: %w", err)
+	}
+
+	_, err = tx.Exec(ctx, `
+		UPDATE wallets
+		SET balance = balance + $1, updated_at = CURRENT_TIMESTAMP
+		WHERE id = $2
+	`, deposit.Amount, walletId)
+
+	if err != nil {
+		return fmt.Errorf("failed to update wallet balance: %w", err)
+	}
+
+	err = tx.Commit(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to commit deposit transaction: %w", err)
+	}
+
+	return nil
+}

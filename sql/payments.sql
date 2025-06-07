@@ -26,9 +26,34 @@ CREATE TABLE transactions (
   status TEXT NOT NULL CHECK (
     status IN ('pending', 'completed', 'failed', 'refunded')
   ),
-  type TEXT NOT NULL CHECK (type IN ('payment', 'refund', 'adjustment')),
+  type TEXT NOT NULL CHECK (
+    type IN (
+      'payment',
+      'refund',
+      'adjustment',
+      'deposit',
+      'withdrawal'
+    )
+  ),
   reference_id UUID, -- optional: could link to payments or refunds
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT transactions_deposit_check CHECK (
+    (
+      type = 'deposit'
+      AND from_wallet_id IS NULL
+      AND to_wallet_id IS NOT NULL
+    )
+    OR (
+      type = 'withdrawal'
+      AND from_wallet_id IS NOT NULL
+      AND to_wallet_id IS NULL
+    )
+    OR (
+      type IN ('payment', 'refund', 'adjustment')
+      AND from_wallet_id IS NOT NULL
+      AND to_wallet_id IS NOT NULL
+    )
+  )
 );
 
 CREATE INDEX idx_transactions_from_wallet_id ON transactions (from_wallet_id);

@@ -40,14 +40,11 @@ type Transaction struct {
 	CreatedAt    time.Time  `json:"created_at"`
 }
 
+
 type Payment struct {
-	ID            uuid.UUID  `json:"id"`
-	SenderID      uuid.UUID  `json:"sender_id"`
-	ReceiverID    uuid.UUID  `json:"receiver_id"`
-	Amount        int64      `json:"amount"`
-	Status        string     `json:"status"`
+	ID uuid.UUID `json:"id"`
+	PaymentInsert
 	TransactionID *uuid.UUID `json:"transaction_id,omitempty"` // Nullable field
-	Note          string     `json:"note"`
 	CreatedAt     time.Time  `json:"created_at"`
 }
 
@@ -57,6 +54,12 @@ type PaymentInsert struct {
 	Amount     int64     `json:"amount"`
 	Status     string    `json:"status"`
 	Note       string    `json:"note"`
+}
+
+type DepositInsert struct {
+	UserID    uuid.UUID `json:"user_id"`
+	Amount    int64     `json:"amount"`
+	CreatedAt time.Time `json:"created_at"`
 }
 
 type PaymentWithNames struct {

@@ -1,6 +1,7 @@
 package payments
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -11,11 +12,18 @@ import (
 	"github.com/google/uuid"
 )
 
-type PaymentHandler struct {
-	service *PaymentService
+type PaymentServiceInterface interface {
+	GetAllPayments(context.Context) ([]models.Payment, error)
+	GetPaymentsByUserId(ctx context.Context, userId uuid.UUID) ([]models.PaymentWithNames, error)
+	InsertNewPayment(ctx context.Context, newP *models.PaymentInsert) (uuid.UUID, error)
+	ProcessDeposit(ctx context.Context, deposit *models.DepositInsert) error
 }
 
-func NewPaymentsHandler(s *PaymentService) *PaymentHandler {
+type PaymentHandler struct {
+	service PaymentServiceInterface
+}
+
+func NewPaymentsHandler(s PaymentServiceInterface) *PaymentHandler {
 	return &PaymentHandler{
 		service: s,
 	}
@@ -98,4 +106,35 @@ func (p *PaymentHandler) InsertPayment(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusCreated)
 	fmt.Fprintf(w, "Payment created with ID: %s", newPaymentId)
+}
+
+func (p *PaymentHandler) Deposit(w http.ResponseWriter, r *http.Request) {
+	userId, ok := r.Context().Value("user_id").(uuid.UUID) //need to use auth first
+	if !ok {
+		http.Error(w, "Unauthorized: user not authenticated", http.StatusUnauthorized)
+		return
+	}
+
+	var depositRequest models.DepositInsert
+	err := json.NewDecoder(r.Body).Decode(&depositRequest)
+	if err != nil {
+		http.Error(w, "failed parsing new deposits", http.StatusBadRequest)
+	}
+
+	depositRequest.UserID = userId
+
+	err = p.service.ProcessDeposit(r.Context(), &depositRequest)
+
+	if err != nil {
+		switch {
+		case errors.Is(err, ErrUserIdNotFound):
+			http.Error(w, "User ID does not exist in our DB.", http.StatusBadRequest)
+		case errors.Is(err, ErrDepositAmountInvalid):
+			http.Error(w, "Deposit amount must be greater than zero", http.StatusBadRequest)
+		default:
+			log.Printf("handler: error processing deposit: %v", err.Error())
+			http.Error(w, "Error processing deposit", http.StatusInternalServerError)
+		}
+		return
+	}
 }

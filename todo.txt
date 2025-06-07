@@ -1,14 +1,16 @@
-payments per user,
-paginate and offset those.
+1. Feature Suggestions ￼
 
-return a summary by day?
-    [
-    may 2 {
-        payment x{}
-        payment y{}
-    }
-    may 29 {}
-]
+Core Banking Features:
+ • User registration & authentication (JWT or OAuth2)
+ • Wallet creation & management
+ • Deposit, withdraw, transfer between users
+ • Transaction history with filtering (date, type, etc.)
+ • Balance inquiry
+ • Account locking/freezing
 
-authentication -> so i can get payments by get user id by token or something.
-and make it private
+Advanced Features:
+ • Scheduled/recurring payments
+ • Multi-currency support
+ • Notifications (email, SMS, in-app)
+ • Admin dashboard (view users, transactions, etc.)
+ • Fraud detection (basic rules)

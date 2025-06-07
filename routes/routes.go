@@ -28,7 +28,9 @@ func CreateRouter(ctx context.Context, mux *http.ServeMux, config config.Config)
 
 	mux.HandleFunc("GET /payments", paymentHandler.GetAllPayments)
 	mux.HandleFunc("GET /user/payments", paymentHandler.GetPaymentsByUserId)
-	mux.HandleFunc("POST /payments", paymentHandler.InsertPayment)
+
+	mux.HandleFunc("POST /pay", paymentHandler.InsertPayment)
+	mux.HandleFunc("POST /deposit", paymentHandler.Deposit)
 
 	mux.HandleFunc("GET /users", userHandler.GetAllUsers)
 	mux.HandleFunc("GET /user", userHandler.GetUserById)
